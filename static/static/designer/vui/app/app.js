@@ -1,7 +1,3 @@
-/**
- * Created by jf on 2015/9/11.
- * Modified by bear on 2016/9/7.
- */
 $(function () {
 
     if(document.domain != 'localhost') {
@@ -9,12 +5,12 @@ $(function () {
     }
 
     jQuery.fn.isChildOf = function(b) { 
-        return (this.parents(b).length > 0); 
+        return (this.parents(b).length > 0);
     };
 
     //判断:当前元素是否是被筛选元素的子元素或者本身 
     jQuery.fn.isChildAndSelfOf = function(b) { 
-        return (this.closest(b).length > 0); 
+        return (this.closest(b).length > 0);
     }; 
 
     var jq = jQuery.noConflict();
@@ -94,8 +90,6 @@ $(function () {
                 $html.removeClass('slideIn').addClass('js_show');
             });
 
-            traversalDOMTree($html);
-
             this.$container.append($html);
             this._pageAppend.call(this, $html);
             this._pageStack.push({
@@ -122,6 +116,7 @@ $(function () {
 
             var url = location.hash.indexOf('#') === 0 ? location.hash : '#';
             var found = this._findInStack(url);
+
             if (!found) {
                 var html = jq(config.template).find('.page').clone(true);
                 var $html = jq(html).addClass('js_show').addClass(config.name);
@@ -175,7 +170,7 @@ $(function () {
             page.isBind = true;
         },
         remove: function(page) {
-            jq('.page.' + page.data.key).hide();
+            jq('.' + page.data.key).remove();
             jq('script[id="' + page.data.key + '"]').remove();
 
             this._configs.splice(page.index, 1);
@@ -243,53 +238,6 @@ $(function () {
             })
         }
     }
-    function setJSAPI(){
-        var option = {
-            title: 'WeUI, 为微信 Web 服务量身设计',
-            desc: 'WeUI, 为微信 Web 服务量身设计',
-            link: "https://weui.io",
-            imgUrl: 'https://mmbiz.qpic.cn/mmemoticon/ajNVdqHZLLA16apETUPXh9Q5GLpSic7lGuiaic0jqMt4UY8P4KHSBpEWgM7uMlbxxnVR7596b3NPjUfwg7cFbfCtA/0'
-        };
-
-        $.getJSON('https://weui.io/api/sign?url=' + encodeURIComponent(location.href.split('#')[0]), function (res) {
-            wx.config({
-                beta: true,
-                debug: false,
-                appId: res.appid,
-                timestamp: res.timestamp,
-                nonceStr: res.nonceStr,
-                signature: res.signature,
-                jsApiList: [
-                    'onMenuShareTimeline',
-                    'onMenuShareAppMessage',
-                    'onMenuShareQQ',
-                    'onMenuShareWeibo',
-                    'onMenuShareQZone',
-                    // 'setNavigationBarColor',
-                    'setBounceBackground'
-                ]
-            });
-            wx.ready(function () {
-                /*
-                 wx.invoke('setNavigationBarColor', {
-                 color: '#F8F8F8'
-                 });
-                 */
-                wx.invoke('setBounceBackground', {
-                    'backgroundColor': '#F8F8F8',
-                    'footerBounceColor' : '#F8F8F8'
-                });
-                wx.onMenuShareTimeline(option);
-                wx.onMenuShareQQ(option);
-                wx.onMenuShareAppMessage({
-                    title: 'WeUI',
-                    desc: '为微信 Web 服务量身设计',
-                    link: location.href,
-                    imgUrl: 'https://mmbiz.qpic.cn/mmemoticon/ajNVdqHZLLA16apETUPXh9Q5GLpSic7lGuiaic0jqMt4UY8P4KHSBpEWgM7uMlbxxnVR7596b3NPjUfwg7cFbfCtA/0'
-                });
-            });
-        });
-    }
 
     function getPageConfig(name, url, id) {
         return {
@@ -341,11 +289,9 @@ $(function () {
         preload();
         fastClick();
         androidInputBugFix();
-        // setJSAPI();
-        // setPageManager();
     }
-    init();
 
+    init();
 
     var dndHandlder = function() {
 
@@ -385,6 +331,18 @@ $(function () {
 
             ctrlExchanged: function(c) {
                 parent.parent.postMessage({'ctrlExchanged': c}, '*');
+            },
+
+            startRouting: function() {
+                parent.postMessage({
+                    'startRouting': true
+                }, '*');
+            },
+
+            stopRouting: function() {
+                parent.postMessage({
+                    'stopRouting': true
+                }, '*');
             }
 
         }
@@ -423,16 +381,32 @@ $(function () {
                 isController = target.data('is-controller'),
                 dataControl = target.data("controller");
 
-                console.log(target, isController, dataControl);
-
             if(!dataControl) {
-                // alert('组件结构出错!');
+                if(target.attr('tabbar')) {
+
+                    var tpls = jq('script[id]');
+
+                    for (var i = 0; i < tpls.length; i++) {
+                        var tpl = jq(tpls[i]);
+                        if(tpl.attr('router') == target.attr('router')) {
+                            postMessageToFather.startRouting();
+                            pageManager.go(tpl.attr('id'));
+                            controllerOperations.hideDesignerDraggerBorder();
+                            postMessageToFather.pageSelected({
+                                key: tpl.attr('id')
+                            });
+                            break;
+                        }
+                    };
+                }
                 return false;
             }
 
             if(isController) {
                 //触发控件被点击事件
                 controllerOperations.select(dataControl);
+                //阻止事件，比如 a 标签的跳转
+                e.preventDefault();
             }
         });
 
@@ -526,10 +500,8 @@ $(function () {
                             controller: controller,
                             page: page
                         });
-
                     ctrlRefresher.setAttribute();
                     controllerOperations.showDesignerDraggerBorder(target)
-
                 }
             },
 
@@ -551,6 +523,12 @@ $(function () {
                     this.changeBackgroundTextStyle(attr.backgroundTextStyle._value);
 
                     this.tabBar.refreshTabBarStyle(data);
+
+                    if(data.attr.routingURL) {
+                        //页面路由发生变化，script模版路由属性跟着变化
+                        jq('script[id="' + data.key + '"').attr('router', data.attr.routingURL._value);
+                    }
+
                 },
 
                 changeBackgroundTextStyle: function(style) {
@@ -591,7 +569,7 @@ $(function () {
                             jq('.page-app').html(tabs);
 
                             this.refreshTabBarStyle(tabBar);
-                            this.addTabBarToMainPage(tabList);
+                            this.addTabBarToMainPage(tabList, tabBar);
                         }else {
                             tpl.html('');
                             jq('.page-app').find('.weui-tab').remove();
@@ -616,8 +594,8 @@ $(function () {
                     },
 
                     generateTabBar: function(iconPath, text, pagePath, selectedIconPath) {
-                        return '<a href="javascript:location.hash=\"' + pagePath + '\";" class="weui-tabbar__item"> \
-                             <img src="' + iconPath + '" alt="" class="weui-tabbar__icon"> \
+                        return '<a tabbar="true" router="' + pagePath + '" href="#' + pagePath + '" class="weui-tabbar__item"> \
+                             <img tabbar="true" router="' + pagePath + '" src="' + iconPath + '" alt="" class="weui-tabbar__icon"> \
                              <p class="weui-tabbar__label">' + text + '</p> \
                         </a>';
                     },
@@ -629,7 +607,7 @@ $(function () {
                                 </div>';
                     },
 
-                    addTabBarToMainPage: function(tabList) {
+                    addTabBarToMainPage: function(tabList, tabBar) {
                         var tabs = this.generateTabBarLoop(tabList);
                         jq('.page-home .weui-tabbar').html(tabs);
                     },
@@ -741,11 +719,23 @@ $(function () {
 
                     //获取父元素的window对象上的数据
                     var controller = parent.parent.dndData;
-                    parent.parent.currentTarget = e.target;
+
+                    //传回父页面的数据
                     var ctrlAndTarget = {
                         ctrl: controller,
                         target: e.target.id
                     }
+
+                    //若拖进来的元素必须有特定的父元素则判断是否需要添加其特定父元素
+                    if (controller.attr.theParent && controller.attr.theParent._value && 
+                        controller.attr.theParent._value.tag != e.target.tagName && 
+                        e.target.className.indexOf(controller.attr.theParent._value.className == -1)) {
+                        
+                        ctrlAndTarget.theParent = controller.attr.theParent._value;
+
+                    }
+                    parent.parent.currentTarget = e.target;
+                    
                     if (!dropTarget.hasClass('page__bd')) {
                         dropTarget.css({
                             height: 'auto'
@@ -875,7 +865,6 @@ $(function () {
 
         routerGenerator.prototype = {
             init: function() {
-
                 if(this.pages.length) {
                     for (var i = 0; i < this.pages.length; i++) {
                         var currentPage = this.pages[i];
@@ -888,8 +877,9 @@ $(function () {
             },
 
             appendPageToHTML: function(page) {
-                var wrapper = jq(this.generateTplScript(page.key)),
+                var wrapper = jq(this.generateTplScript(page.key, page.attr.routingURL._value)),
                     target;
+
                 jq('#container').after(wrapper);
 
                 if(page.key == 'page-home') {
@@ -929,12 +919,11 @@ $(function () {
                         this.generateTpl(ctrl, jq(currentElem));
                     }
 
-
                 };
             },
 
-            generateTplScript: function(id) {
-                var wrapper = '<script type="text/html" id="' + id + '"></script>';
+            generateTplScript: function(id, router) {
+                var wrapper = '<script type="text/html" id="' + id + '" router="' + router + '"></script>';
                 return wrapper;
             }
         };
@@ -1220,11 +1209,8 @@ $(function () {
 
                     //阻止用户在设计器中改变表单的值
                     if (att == 'value' || att == 'checked') {
-                        this.elem.on('change', function () {
-                            return false;
-                        });
+                        this.elem.attr('readonly', true);
                     }
-
                 }
 
                 this.elem.attr('id', this.controller.key);
@@ -1277,6 +1263,7 @@ $(function () {
                 elem.attr('draggable', true);
 
                 elem.on('dragstart', function (e) {
+
                     e.originalEvent.dataTransfer.effectAllowed = "move";
                     
                     //初始化会改变的属性数据
@@ -1509,7 +1496,6 @@ $(function () {
                     evtAction = {
 
                         previewerLayoutLoaded: function() {
-
                             var LG = new layoutGenerator(data);
 
                             var dnd = new dndInitialization({
@@ -1525,6 +1511,7 @@ $(function () {
                                 .push(getPageConfig(data.key, data.key, data.key))
                                 .go(data.key);
 
+                            pageOperations.refreshApp(data);
                             controllerOperations.hideDesignerDraggerBorder();
                         },
 
@@ -1541,6 +1528,7 @@ $(function () {
                             controllerOperations.hideDesignerDraggerBorder();
                             setTimeout(function() {
                                 pageOperations.refreshApp(data);
+                                postMessageToFather.stopRouting();
                             }, 100);
                         },
 
@@ -1554,13 +1542,13 @@ $(function () {
                                     page: data.page
                                 }),
 
-                                elem = comGen.createElement(),
+                                elem = jq(comGen.createElement()),
 
-                                appendResult = jq(parent.parent.currentTarget).append(elem);
+                                appendResult = jq(parent.parent.currentTarget).append(elem.clone(true));
 
                             var pageId = location.hash.split('#')[1] || 'page-home';
 
-                            jq('script[id="' + pageId + '"]').find('.page').html(jq('.' + pageId).html());
+                            jq('script[id="' + pageId + '"]').html(jq('.' + pageId).clone(true));
 
                             controllerOperations.select(controller);
 

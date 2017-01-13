@@ -94,7 +94,7 @@ $(function() {
                 $html.removeClass('slideIn').addClass('js_show');
             });
 
-            if (jq('.' + config.name).length <= 0) {
+            if (jq('.container .' + config.name).length <= 0) {
                 this.$container.append($html);
             }
 
@@ -415,6 +415,7 @@ $(function() {
             var target = jq(e.target),
                 isController = target.data('is-controller'),
                 dataControl = target.data("controller");
+
             if (!dataControl) {
                 if (target.attr('tabbar')) {
 
@@ -439,6 +440,18 @@ $(function() {
             if (isController) {
                 //触发控件被点击事件
                 controllerOperations.select(dataControl);
+                //阻止事件，比如 a 标签的跳转
+                e.preventDefault();
+            }
+        });
+
+        jq(document).on("dblclick", function(e) {
+            e.stopPropagation();
+            var target = jq(e.target),
+                isController = target.data('is-controller'),
+                dataControl = target.data("controller");
+
+            if (isController) {
                 //阻止事件，比如 a 标签的跳转
                 if(target.attr('url')){
                     var tpls = jq('script[id]');
@@ -473,6 +486,7 @@ $(function() {
                 e.preventDefault();
             }
         });
+
 
         var controllerOperations = {
                 select: function(controller, isSentByParent) {
@@ -783,8 +797,23 @@ $(function() {
                         jq(this).find(".app-components").on("dragstart", function(ev) {
                             data = jq(ev.target).clone();
 
+                            var controller = parent.parent.dndData;
+
+                            //传回父页面的数据
+                            var ctrlAndParent = {
+                                controller: controller
+                            }
+
+                            //若拖进来的元素必须有特定的父元素则判断是否需要添加其特定父元素
+                            // var appendParent = jq('#' + dndData.dragAddCtrlTargetId)[0];
+                            if (controller.attr.theParent && controller.attr.theParent._value) {
+
+                                ctrlAndParent.theParent = controller.attr.theParent._value;
+
+                            }
+
                             //生成dom数据结构
-                            postMessageToFather.generateCtrl(parent.parent.dndData);
+                            postMessageToFather.generateCtrl(ctrlAndParent);
 
                             //初始化一些拖拽过程中的数据
                             dndData.dragAddCtrlTargetId = '';
@@ -873,16 +902,14 @@ $(function() {
                         prevElementId: dndData.addCtrlbyAfter.prevElementId
                     }
 
-                    //若拖进来的元素必须有特定的父元素则判断是否需要添加其特定父元素
-                    var appendParent = jq('#' + dndData.dragAddCtrlTargetId)[0];
-                    if (controller.attr.theParent && controller.attr.theParent._value &&
-                        controller.attr.theParent._value.tag != appendParent.tagName &&
-                        appendParent.className.indexOf(controller.attr.theParent._value.className) == -1) {
+                    // //若拖进来的元素必须有特定的父元素则判断是否需要添加其特定父元素
+                    // var appendParent = jq('#' + dndData.dragAddCtrlTargetId)[0];
+                    // if (controller.attr.theParent && controller.attr.theParent._value) {
 
-                        ctrlAndTarget.theParent = controller.attr.theParent._value;
-                        ctrlAndTarget.theParent.indexOfDragElement = dropTarget.children().index(dragElement);
+                    //     ctrlAndTarget.theParent = controller.attr.theParent._value;
+                    //     ctrlAndTarget.theParent.indexOfDragElement = dropTarget.children().index(dragElement);
 
-                    }
+                    // }
 
                     parent.parent.currentTarget = e.target;
 
@@ -963,6 +990,7 @@ $(function() {
                             dndData.dragElement = dndData.dragAddCtrl;
                             dndData.orginY = e.pageY;
                             dndData.dragElementParent = dndData.dragElement.parent();
+
                         } else if (!dndData.haveAppened) {
                             //after到其后面去
                             target.after(dndData.dragAddCtrl);
@@ -984,27 +1012,6 @@ $(function() {
                             dndData.addCtrlbyAfter.prevElementId = targetId;
                         }
                     }
-                    // if (targetId != dndData.dragAddCtrl.eq(0).attr('id') &&
-                    //     !dndData.dragAddCtrl.find('#' + targetId).length &&
-                    //     (target.data('is-container') || target.hasClass('page__hd') ||
-                    //         target.hasClass('page__bd') || target.hasClass('page__ft')) &&
-                    //     !dndData.haveAppened) {
-
-                    //     //append进去
-                    //     target.append(dndData.dragAddCtrl);
-                    //     dndData.haveAppened = true;
-                    //     dndData.dragAddCtrl.css('opacity','.3');
-
-                    //     //append到父元素
-                    //     dndData.dragAddCtrlTargetId = targetId;
-
-                    //     //初始化拖拽元素
-                    //     dndData.dragElement = dndData.dragAddCtrl;
-                    //     dndData.orginY = e.pageY;
-                    //     dndData.dragElementParent = dndData.dragElement.parent();
-
-                    // }
-
 
                 });
             }
@@ -1255,7 +1262,6 @@ $(function() {
 
                 referHeight = 30; //位置变换的参考高度
 
-
             //小于参考高度的 -2/3 使用before()
             if (moveY <= -referHeight / 3 * 2) {
 
@@ -1435,7 +1441,7 @@ $(function() {
 
             //组件树结构改变
             if (dndData.constructTreeData.haveChange) {
-                postMessageToFather.ctrlExchanged(dndData.constructTreeData)
+                postMessageToFather.ctrlExchanged(dndData.constructTreeData);
             }
 
             postMessageToFather.ctrlUpdated({
@@ -1446,6 +1452,8 @@ $(function() {
         }
 
         function ComponentsGenerator(params) {
+
+            console.log(params);
 
             params.initElem = params.initElem || false;
 
@@ -1890,6 +1898,9 @@ $(function() {
                         },
 
                         ctrlGenerated: function() {
+
+                            console.log('ctrlGenerated');
+
                             var controller = data.controller;
 
                             comGen = new ComponentsGenerator({
@@ -1903,46 +1914,19 @@ $(function() {
                             dndData.dragAddCtrl = elem;
                             dndData.dragAddCtrlData = controller;
 
-                            // appendResult = jq(parent.parent.currentTarget).append(elem.clone(true));
-
-                            // console.log(parent.parent.currentTarget);
-
-                            // var pageId = location.hash.split('#')[1] || 'page-home';
-
-                            // jq('script[id="' + pageId + '"]').html(jq('.' + pageId).clone(true));
-
-                            // controllerOperations.select(controller);
-                        },
-
-                        ctrlParentAdded: function() {
-
-                            var controller = data.controller,
-
-                                comGen = new ComponentsGenerator({
-                                    controller: controller,
-                                    initElem: true,
-                                    page: data.page
-                                }),
-
-                                elem = jq(comGen.createElement());
-
-                            //若有特定父级则用父级将其包裹
-                            dndData.dragAddCtrl.wrap(elem);
-
-                            postMessageToFather.ctrlExchanged({
-                                exchElementId: [controller.key],
-                                dragElementId: [dndData.dragAddCtrlData.key],
-                                changeType: ['toFindParent']
-                            });
-
-                            
-
-                            controllerOperations.select(controller);
+                            if(data.isManaully) {
+                                jq(parent.parent.currentTarget).append(elem.clone(true));
+                                var pageId = location.hash.split('#')[1] || 'page-home';
+                                jq('script[id="' + pageId + '"]').html('');
+                                jq('script[id="' + pageId + '"]').html(jq('.' + pageId).clone(true));
+                                controllerOperations.select(data.controller);
+                            }
 
                         },
 
                         controllerAdded: function () {
                             var pageId = location.hash.split('#')[1] || 'page-home';
+                            jq('script[id="' + pageId + '"]').html('');
                             jq('script[id="' + pageId + '"]').html(jq('.' + pageId).clone(true));
                             controllerOperations.select(data.controller);
                         },

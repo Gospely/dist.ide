@@ -1,9 +1,0 @@
-// .hight-light {
-// 	border: 1px solid #0894ec;
-// }
-
-.control-box.remove {
-	position: absolute;
-	z-index: 65535;
-	display: none;
-}

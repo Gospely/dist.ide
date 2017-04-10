@@ -1,6 +1,6 @@
 $(function() {
 	if (document.domain != 'localhost') {
-		document.domain = 'gospely.com';
+		// document.domain = 'gospely.com';
 	}
 
 	//animation动画函数(在这里定义全局变量才能解绑)

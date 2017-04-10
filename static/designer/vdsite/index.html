@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html class="vd-design-mode">
+<head>
+	<meta charset="utf-8">
+	<title>vdsite-designer</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<meta name="generator" content="Gospel">
+	<link rel="stylesheet" type="text/css" href="/static/designer/vdsite/css/normalize.css">
+	<link rel="stylesheet" type="text/css" href="/static/designer/vdsite/css/gospel.css">
+	<link rel="stylesheet" type="text/css" href="/static/designer/vdsite/css/styles.css">
+	<link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.7.0/css/font-awesome.min.css">
+	<link href="//cdn.bootcss.com/animate.css/3.5.2/animate.min.css" rel="stylesheet">
+	<script type="text/javascript" src="/static/designer/vdsite/js/modernizr.js"></script>
+</head>
+<body>
+
+	<div class="vd-OutlineSelectedNode selected-outline vd-outline active" id="vd-OutlineSelectedActiveNode" style="display:none">
+		<div class="breadcrumbs">
+			<div class="inner">
+				<div class="crumbs clearfix" title="Show More">
+					<div class="crumb">
+						<div class="inner has-mini-settings">
+							<span class="icon"><i class="el-icon n-form"></i></span><span class="label">Form Wrapper</span>
+						</div>
+					</div>
+					<div class="crumb">
+						<div class="inner has-mini-settings">
+							<span class="icon"><i class="el-icon n-form"></i></span><span class="label">Form</span>
+						</div>
+					</div>
+					<div class="crumb current">
+						<div class="inner has-mini-settings">
+							<span class="icon"><i class="el-icon n-input"></i></span><span id="ctrl-title-clicked" class="label">Text Field</span><span class="icon open-mini-settings" title="Show Settings"><i class="icon-main"></i></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="vd-OutlineHoveredNode selected-outline vd-outline active" id="vd-OutlineSelectedHoverNode" style="display:none">
+		<div class="breadcrumbs">
+			<div class="inner">
+				<div class="crumbs clearfix" title="Show More">
+					<div class="crumb">
+						<div class="inner has-mini-settings">
+							<span class="icon"><i class="el-icon n-form"></i></span><span class="label">Form Wrapper</span>
+						</div>
+					</div>
+					<div class="crumb">
+						<div class="inner has-mini-settings">
+							<span class="icon"><i class="el-icon n-form"></i></span><span class="label">Form</span>
+						</div>
+					</div>
+					<div class="crumb current">
+						<div class="inner has-mini-settings">
+							<span class="icon"><i class="el-icon n-input"></i></span><span id="ctrl-title-hover" class="label">Text Field</span><span class="icon open-mini-settings" title="Show Settings"><i class="icon-main"></i></span>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="vd-insert-guide" id="vdInsertGuide"></div>
+	<div style="display: none;" id="vdInsertGuideHidden"></div>
+	<div class="vd-OutlineDropParentNode" id="vdOutlineDropParentNode"></div>
+
+	<div id="VDDesignerContainer" class="VDDesignerContainer"></div>
+
+	<ul class="vd-right-click-menu" id="vdRightClickMenu">
+		<li id="vdCut">剪切</li>
+		<li id="vdCopy">复制</li>
+		<li id="vdPastBefore">粘贴到其前面</li>
+		<li id="vdPastAfter">粘贴到其后面</li>
+		<li id="vdPast">粘贴到里面</li>
+		<li id="vdPastPre">粘贴到里面第一个</li>
+		<li id="vdDelete">删除</li>
+	</ul>
+
+	<script src="//cdn.bootcss.com/jquery/3.1.1/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<!--[if lte IE 9]>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/placeholders/3.0.2/placeholders.min.js"></script>
+	<![endif]-->
+	<script type="text/javascript" src="/static/designer/vdsite/js/main.js"></script>
+	<script type="text/javascript" src="/static/designer/vdsite/js/designer.js"></script>
+</body>
+</html>
